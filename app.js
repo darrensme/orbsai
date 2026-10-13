@@ -2099,12 +2099,23 @@ const PLAN_INFO = [
   { id:"plusplus", name:"Pro", color:"#9b5cff", month:19.99, year:199.99, pop:true, perks:["Claude Opus, the smartest model", "5x the messages of Free", "25 web searches a day", "Memory: orbs remember you", "Orb Teams: up to 5 orbs work together"], soon:["Custom orbs"] },
   { id:"plusplusplus", name:"Max", color:"#ff5fb8", month:49.99, year:499.99, perks:["Claude Opus, the smartest model", "10x the messages of Free", "50 web searches a day", "Memory: orbs remember you", "Orb Teams: up to 5 orbs work together", "New features first"], soon:["Custom orbs"] },
 ];
+// Local money, for show only ("about £7.80"). Stripe works out the real price at checkout. Stays empty for US visitors.
+let geo = { currency:"USD", rate:1 };
+const localTxt = usd => {
+  if (!geo || geo.currency === "USD" || !(geo.rate > 0)) return "";
+  try { return "about " + new Intl.NumberFormat(undefined, { style:"currency", currency:geo.currency, maximumFractionDigits: geo.rate >= 50 ? 0 : 2 }).format(usd * geo.rate); } catch(_) { return ""; }
+};
+const geoP = fetch("/api/geo").then(r => r.ok ? r.json() : null).then(j => {
+  if (j && typeof j.currency === "string" && j.currency !== "USD" && j.rate > 0) { geo = j; landingPlans(); if (!$("planModal").hidden) renderPlans(); }
+}).catch(() => {});
 // Landing pricing cards (same plans as the Upgrade window)
-(function landingPlans(){
+function landingPlans(){
   const grid = $("lpGrid"); if (!grid) return;
-  const card = (name, color, price, sub, perks, pop, id) => {
+  grid.innerHTML = "";
+  const card = (name, color, price, sub, perks, pop, id, usd) => {
     const c = el("div", "pcard" + (pop ? " pop" : "")); c.style.setProperty("--pc", color);
     const pr = el("div", "price", price); if (sub) pr.append(el("small", null, sub));
+    if (usd) { const lt = localTxt(usd); if (lt) pr.append(el("small", "local", lt)); }
     const deal = id && promoOn(id) ? dealTag() : null;
     const ul = el("ul"); perks.forEach(t => ul.append(el("li", null, t)));
     const b = el("button", "gbtn", "Get started"); b.type = "button"; b.onclick = () => setAuthMode("up");
@@ -2112,8 +2123,9 @@ const PLAN_INFO = [
     c.append(h, pr); if (deal) c.append(deal); c.append(ul, b); grid.append(c);
   };
   card("Free", "#6e6b64", "$0", "", ["15 messages a day", "Claude Haiku, fast and simple", "A few web searches a day"]);
-  for (const pl of PLAN_INFO) card(pl.name, pl.color, "$" + pl.month, " / month", [...pl.perks, ...pl.soon.map(t => t + " (coming soon)"), "or $" + pl.year + " a year"], pl.pop, pl.id);
-})();
+  for (const pl of PLAN_INFO) card(pl.name, pl.color, "$" + pl.month, " / month", [...pl.perks, ...pl.soon.map(t => t + " (coming soon)"), "or $" + pl.year + " a year" + (localTxt(pl.year) ? " (" + localTxt(pl.year) + ")" : "")], pl.pop, pl.id, pl.month);
+}
+landingPlans();
 let planInterval = "month";
 async function refreshStatus(){ if (!user) return; try { await kidsApi(user, { action:"status" }); renderUsage(); renderPlan(); syncSel(); } catch(_) {} }
 const fmtDate = sec => sec ? new Date(sec * 1000).toLocaleDateString([], { month:"short", day:"numeric", year:"numeric" }) : "";
@@ -2160,6 +2172,7 @@ function renderPlans(){
   for (const pl of PLAN_INFO) {
     const c = el("div", "pcard" + (pl.id === cur ? " cur" : "") + (pl.pop && !cur ? " pop" : "")); c.style.setProperty("--pc", pl.color);
     const price = el("div", "price", "$" + (planInterval === "year" ? pl.year : pl.month)); price.append(el("small", null, planInterval === "year" ? " / year" : " / month"));
+    { const lt = localTxt(planInterval === "year" ? pl.year : pl.month); if (lt) price.append(el("small", "local", lt)); }
     const ul = el("ul"); pl.perks.forEach(t => ul.append(el("li", null, t))); pl.soon.forEach(t => ul.append(el("li", "soon", t + " (coming soon)")));
     const b = el("button", "gbtn"); b.type = "button";
     if (kids.plan && kids.plan.test) { b.textContent = pl.id === cur ? "Testing this 🧪" : "Switch to Owner to buy"; b.disabled = true; }
