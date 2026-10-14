@@ -1753,7 +1753,7 @@ let bdYears = [];
 const pad2 = (n) => String(n).padStart(2, "0");
 const nums = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 function bdAgeOf(y, m, d){ const n = new Date(); return n.getFullYear() - y - ((n.getMonth() + 1 < m || (n.getMonth() + 1 === m && n.getDate() < d)) ? 1 : 0); }
-function bdFill(col, labels){ col.replaceChildren(...labels.map((t, i) => { const x = el("div", "bdit", String(t)); x.setAttribute("role", "option"); x.onclick = () => col.scrollTo({ top: i * ROW, behavior: "smooth" }); return x; })); }
+function bdFill(col, labels){ col.replaceChildren(...labels.map((t, i) => { const x = el("div", "bdit", String(t)); x.setAttribute("role", "option"); x.onclick = () => { if (col.dataset.dragged) return; col.scrollTo({ top: i * ROW, behavior: "smooth" }); }; return x; })); }
 const bdIdx = (col) => Math.max(0, Math.min(col.children.length - 1, Math.round(col.scrollTop / ROW)));
 const bdVal = () => ({ m: bdIdx(bdCols.m) + 1, d: bdIdx(bdCols.d) + 1, y: bdYears[bdIdx(bdCols.y)] });
 function bdPaint(){
@@ -1774,6 +1774,19 @@ function bdSet(iso){
 }
 for (const c of Object.values(bdCols)) {
   let raf = 0; c.addEventListener("scroll", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(bdPaint); }, { passive:true });
+  // Click and drag with a mouse (phones already swipe)
+  c.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    const y0 = e.clientY, top0 = c.scrollTop; delete c.dataset.dragged;
+    c.style.scrollSnapType = "none"; c.style.cursor = "grabbing";
+    const move = (ev) => { const dy = ev.clientY - y0; if (Math.abs(dy) > 4) c.dataset.dragged = "1"; c.scrollTop = top0 - dy; };
+    const up = () => {
+      removeEventListener("pointermove", move); removeEventListener("pointerup", up);
+      c.style.cursor = ""; const i = bdIdx(c); c.style.scrollSnapType = ""; c.scrollTo({ top: i * ROW, behavior: "smooth" });
+      setTimeout(() => delete c.dataset.dragged, 0);
+    };
+    addEventListener("pointermove", move); addEventListener("pointerup", up);
+  });
   c.onkeydown = (e) => { if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return; e.preventDefault(); c.scrollTo({ top: (bdIdx(c) + (e.key === "ArrowDown" ? 1 : -1)) * ROW, behavior:"smooth" }); };
 }
 $("bdGo").onclick = () => busyBtn($("bdGo"), async () => {
