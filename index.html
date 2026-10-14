@@ -116,6 +116,17 @@ button{font:inherit;color:inherit}
 .gbtn{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;background:var(--accent);color:var(--bg);font-weight:600;border-radius:12px;padding:12px}
 .gcard .outline{width:100%}
 .bday{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;margin:4px 0}
+.bdhero{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 2px}
+.bdbot{position:relative;width:60px;height:60px;animation:bdbob 3.2s ease-in-out infinite}
+.bdneb{display:block;width:60px;height:60px}
+.bdhat{position:absolute;left:27px;top:-24px;width:26px;height:32px;transform:rotate(20deg);z-index:2}
+.bdbub{position:relative;padding:9px 16px;border-radius:16px;background:var(--panel,#fff);border:1px solid var(--line,rgba(128,128,128,.25));font-size:1rem;box-shadow:0 6px 18px rgba(0,0,0,.08);white-space:nowrap}
+.bdbub::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:inherit;border:inherit;border-top:none;border-right:none;transform:translateY(-50%) rotate(45deg)}
+.bdbub b{font:700 1.4rem var(--display,inherit);background:linear-gradient(90deg,#4f7bff,#9b5cff,#ff5fb8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bdbub.pop{animation:bdpop .28s ease}
+@keyframes bdbob{50%{transform:translateY(-4px) rotate(-3deg)}}
+@keyframes bdpop{40%{transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.bdbot,.bdbub.pop{animation:none}}
 .bdwheel{position:relative;width:100%;height:180px;display:grid;grid-template-columns:1.7fr .8fr 1.1fr;gap:6px;-webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent)}
 .bdwheel::before{content:"";position:absolute;left:0;right:0;top:72px;height:36px;border-radius:10px;pointer-events:none;background:linear-gradient(90deg,rgba(79,123,255,.16),rgba(155,92,255,.16),rgba(255,95,184,.16));border:1px solid rgba(155,92,255,.35);box-sizing:border-box}
 .bdcol{height:180px;box-sizing:border-box;padding:72px 0;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;outline:none;border-radius:10px}
@@ -2203,6 +2214,10 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
     </form>
     <div class="vbox" id="aAge" hidden>
       <div class="bday">
+        <div class="bdhero" aria-hidden="true">
+          <div class="bdbot"><svg class="bdhat" viewBox="0 0 28 34"><path d="M14 2 26 31H2Z" fill="#ffd23f"/><path d="M8.6 15.7 20 13l1.5 3.6-14.6 3.4zM5 24.2l18-4.1 1.6 3.8L3.4 28z" fill="#ff5fb8"/><path d="M2 31h24" stroke="#9b5cff" stroke-width="3" stroke-linecap="round"/><circle cx="14" cy="3" r="3.2" fill="#4f7bff"/></svg><span class="bdneb" id="bdNeb"></span></div>
+          <div class="bdbub" id="bdBub">You're <b id="bdAge">0</b></div>
+        </div>
         <div class="bdwheel">
           <div class="bdcol" id="bdM" tabindex="0" role="listbox" aria-label="Month"></div>
           <div class="bdcol" id="bdD" tabindex="0" role="listbox" aria-label="Day"></div>

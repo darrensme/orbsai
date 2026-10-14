@@ -1744,7 +1744,7 @@ $("kidsForm").addEventListener("submit", e => { e.preventDefault(); busyBtn($("k
     msg.textContent = r.error === "wrong_pin" ? `Wrong PIN. ${r.triesLeft} tries left.` : r.error === "too_many_tries" ? "Too many wrong PINs. Try again in 15 minutes." : "Couldn't change Kids Mode. Try again.";
   } catch (_) { msg.textContent = "Couldn't reach Orbs. Check your connection."; }
 }); });
-// Birthday picker: scroll wheels for month, day, year.
+// Birthday picker: scroll wheels for month, day, year. Nebula in a party hat says how old that makes you.
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const ROW = 36, bdCols = { m: $("bdM"), d: $("bdD"), y: $("bdY") };
 let bdYears = [];
@@ -1758,10 +1758,12 @@ function bdPaint(){
   let { m, d, y } = bdVal(); const max = new Date(y, m, 0).getDate();
   if (bdCols.d.children.length !== max) { d = Math.min(d, max); bdFill(bdCols.d, nums(1, max)); bdCols.d.scrollTop = (d - 1) * ROW; }
   for (const c of Object.values(bdCols)) { const i = bdIdx(c); [...c.children].forEach((x, j) => { x.classList.toggle("on", j === i); x.setAttribute("aria-selected", j === i); }); }
-  const a = bdAgeOf(y, m, d);
+  const a = bdAgeOf(y, m, d), bub = $("bdBub"), say = a < 0 ? "That's in the future!" : a === 0 ? "You're brand new!" : `You're <b>${a}</b>!`;
+  if (bub.innerHTML !== say) { bub.innerHTML = say; bub.classList.remove("pop"); void bub.offsetWidth; bub.classList.add("pop"); }
   $("bdGo").disabled = a < 0; $("bdGo").textContent = a < 0 ? "That's in the future" : "That's my birthday";
 }
 function bdSet(iso){
+  if (!$("bdNeb").firstChild) orbInto($("bdNeb"), "neb");
   const top = new Date().getFullYear(); bdYears = nums(top - 100, top);
   const x = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "") || [0, 2000, 1, 1];
   bdFill(bdCols.m, MONTHS); bdFill(bdCols.y, bdYears); bdFill(bdCols.d, nums(1, 31));
