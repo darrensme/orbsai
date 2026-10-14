@@ -2,6 +2,7 @@
 // Talks to Stripe's API directly, so there's nothing extra to install.
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PLANS, prices, priceToPlan, activePlan } from "./_plans.js";
+import { withAge } from "./_kids.js";
 
 function json(status, body) {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
@@ -53,7 +54,7 @@ export function makeBillingHandler({ verifyToken, getSub, getKids, stripe, env =
     if (!user || !user.uid) return json(401, { error: "unauthenticated" });
     if (user.email_verified !== true) return json(403, { error: "unverified" });
     let body; try { body = await request.json(); } catch { return json(400, { error: "bad_request" }); }
-    const k = (await getKids(user.uid)) || {};
+    const k = withAge((await getKids(user.uid)) || {});
     if (k.banned) return json(403, { error: "banned" });
     if (!k.age || k.age === "under13") return json(403, { error: "age_required" });
     let sub = await getSub(user.uid);

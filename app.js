@@ -1543,8 +1543,16 @@ function showGate(mode, email){
   $("aMain").hidden = mode !== "signin"; $("aVerify").hidden = mode !== "verify";
   $("aAge").hidden = mode !== "age"; $("aBlocked").hidden = mode !== "blocked" && mode !== "banned";
   $("aMfa").hidden = mode !== "mfa"; if (mode === "mfa") return;
-  if (mode === "age") { $("aTitle").textContent = "How old are you?"; $("aText").textContent = "Orbs uses this to keep everyone safe. You can't change it later, so please be honest."; return; }
-  if (mode === "blocked") { $("aTitle").textContent = "Sorry!"; $("aText").textContent = "Orbs is only for people 13 and older. Come back when you're older!"; return; }
+  if (mode === "age") {
+    bdSet(bdChanging ? kids.bday : null); $("bdCancel").hidden = !bdChanging; $("bdFine").hidden = bdChanging;
+    $("aTitle").textContent = bdChanging ? "Change your birthday" : "When's your birthday?";
+    $("aText").textContent = bdChanging ? (kids.owner ? "Slide to your real birthday." : "You can only change it once, so make sure it's right.") : "Slide to your birthday. Orbs uses it to keep everyone safe, so please be honest.";
+    return;
+  }
+  if (mode === "blocked") {
+    const when = kids.unlock ? new Date(kids.unlock + "T12:00:00").toLocaleDateString(undefined, { month:"long", day:"numeric", year:"numeric" }) : "";
+    $("aTitle").textContent = "Sorry!"; $("aText").textContent = "Orbs is only for people 13 and older. " + (when ? "Come back on " + when + "!" : "Come back when you're older!"); return;
+  }
   if (mode === "banned") { $("aTitle").textContent = "Account blocked"; $("aText").textContent = "This account can't use Orbs anymore because it broke the rules. If you think that's a mistake, email contact@orbsai.app."; return; }
   if (mode === "loading") { $("aTitle").textContent = "Orbs"; $("aText").textContent = "Loading…"; }
   else if (mode === "setup") { $("aTitle").textContent = "Almost ready"; $("aText").textContent = "Orbs isn't connected to Firebase yet. Paste your Firebase settings into firebase-config.js, then upload it again."; }
@@ -1716,6 +1724,7 @@ function renderKids(){
   if (kids.forcedForAll) { t.textContent = "On for everyone on this site"; $("kidsBtn").hidden = true; }
   else if (kids.locked) { t.textContent = "On (always on for ages 13 to 17)"; $("kidsBtn").hidden = true; }
   else { t.textContent = kids.on ? "On" : "Off"; $("kidsBtn").hidden = false; $("kidsBtn").textContent = kids.on ? "Turn off Kids Mode" : "Turn on Kids Mode"; }
+  $("bdayBtn").hidden = !kids.bdayChange;
   help.textContent = kids.on
     ? "Orbs gives kid-safe answers, checks every message and reply with an AI safety check, and blocks personal info."
     : "Extra safety for kids and teens: kid-safe answers, an AI safety check on every message and reply, and a block on sharing personal info.";
@@ -1735,14 +1744,40 @@ $("kidsForm").addEventListener("submit", e => { e.preventDefault(); busyBtn($("k
     msg.textContent = r.error === "wrong_pin" ? `Wrong PIN. ${r.triesLeft} tries left.` : r.error === "too_many_tries" ? "Too many wrong PINs. Try again in 15 minutes." : "Couldn't change Kids Mode. Try again.";
   } catch (_) { msg.textContent = "Couldn't reach Orbs. Check your connection."; }
 }); });
-for (const b of document.querySelectorAll("[data-age]")) b.onclick = () => busyBtn(b, async () => {
+// Birthday sliders: month, day, year. The orb shows how old that makes you.
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const bdEls = { m: $("bdM"), d: $("bdD"), y: $("bdY") };
+const pad2 = (n) => String(n).padStart(2, "0");
+function bdAgeOf(y, m, d){ const n = new Date(); return n.getFullYear() - y - ((n.getMonth() + 1 < m || (n.getMonth() + 1 === m && n.getDate() < d)) ? 1 : 0); }
+function bdPaint(){
+  const y = +bdEls.y.value, m = +bdEls.m.value, max = new Date(y, m, 0).getDate();
+  bdEls.d.max = max; if (+bdEls.d.value > max) bdEls.d.value = max;
+  const d = +bdEls.d.value, a = bdAgeOf(y, m, d);
+  for (const r of Object.values(bdEls)) r.style.setProperty("--p", ((r.value - r.min) / (r.max - r.min) * 100) + "%");
+  $("bdShow").textContent = `${MONTHS[m - 1]} ${d}, ${y}`;
+  const ab = $("bdAge"); if (ab.textContent !== String(Math.max(a, 0))) { ab.textContent = Math.max(a, 0); const o = $("bdOrb"); o.classList.remove("pop"); void o.offsetWidth; o.classList.add("pop"); }
+  $("bdGo").disabled = a < 0; $("bdGo").textContent = a < 0 ? "That's in the future" : "That's my birthday";
+}
+function bdSet(iso){
+  const n = new Date(); bdEls.y.max = n.getFullYear(); bdEls.y.min = n.getFullYear() - 100;
+  const x = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "") || [0, 2000, 1, 1];
+  bdEls.y.value = +x[1]; bdEls.m.value = +x[2]; bdPaint(); bdEls.d.value = +x[3]; bdPaint();
+}
+for (const r of Object.values(bdEls)) r.oninput = bdPaint;
+for (const b of document.querySelectorAll(".bdstep")) b.onclick = () => { const r = $(b.dataset.k); r.value = +r.value + +b.dataset.d; bdPaint(); };
+let bdChanging = false;
+$("bdGo").onclick = () => busyBtn($("bdGo"), async () => {
   const u = pending || auth.currentUser; if (!u) return showGate("signin");
+  const bday = `${bdEls.y.value}-${pad2(bdEls.m.value)}-${pad2(bdEls.d.value)}`;
   try {
-    const r = await kidsApi(u, { action:"age", age: b.dataset.age });
+    const r = await kidsApi(u, { action:"age", bday });
+    if (!r.ok && r.error === "change_used") return say("You've already changed your birthday once.");
     if (!r.ok && r.error !== "age_already_set") return say("Couldn't save that" + (r.why ? " (" + r.why + ")" : "") + ". Try again.");
-    await enter(u);
+    bdChanging = false; await enter(u);
   } catch (_) { say("Couldn't reach Orbs. Check your connection."); }
 });
+$("bdCancel").onclick = () => { bdChanging = false; gate.hidden = true; };
+$("bdayBtn").onclick = () => { bdChanging = true; showGate("age"); };
 $("bOut").onclick = () => A.signOut(auth);
 
 async function enter(u){

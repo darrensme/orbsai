@@ -1,4 +1,5 @@
-// /api/kids logic: the age question and the parent PIN for Kids Mode.
+// /api/kids logic: the birthday question and the parent PIN for Kids Mode.
+// The age group is worked out from the birthday every time, so people move up on their own when they turn 13 or 18.
 //  - Under 13: can't use Orbs.
 //  - 13 to 17: Kids Mode is on and locked (nobody can turn it off).
 //  - 18+: Kids Mode is optional, and turning it off needs the PIN that was set when it was turned on.
@@ -19,8 +20,37 @@ function tokenProblem(e) {
   return "sign-in couldn't be checked";
 }
 const hashPin = (pin, salt) => scryptSync(pin, salt, 32).toString("hex");
-export function publicState(k, env = {}) {
+
+// Accounts made before birthdays were asked count as born on these days.
+const LEGACY_BDAY = { adult: "2008-01-01", teen: "2013-01-01" };
+// "YYYY-MM-DD" -> { y, m, d }, or null if it isn't a real date
+export function parseBday(s) {
+  const x = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ""));
+  if (!x) return null;
+  const y = +x[1], m = +x[2], d = +x[3], t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d ? { y, m, d } : null;
+}
+export function yearsOld(b, nowMs) {
+  const n = new Date(nowMs), nm = n.getUTCMonth() + 1;
+  return n.getUTCFullYear() - b.y - (nm < b.m || (nm === b.m && n.getUTCDate() < b.d) ? 1 : 0);
+}
+const groupOf = (a) => (a >= 18 ? "adult" : a >= 13 ? "teen" : "under13");
+// Adds the up-to-date age group (and, for under 13, the day they can come back)
+export function withAge(k, nowMs = Date.now()) {
+  if (!k) return k;
+  const bday = k.bday || LEGACY_BDAY[k.age], b = parseBday(bday);
+  if (!b) return k; // old under-13 accounts have no birthday, so they stay blocked
+  const age = groupOf(yearsOld(b, nowMs)), out = { ...k, age, bday };
+  if (k.age === "teen" && age === "adult" && !k.pinHash) out.on = false; // just turned 18: Kids Mode comes off
+  if (age === "under13") out.unlock = new Date(Date.UTC(b.y + 13, b.m - 1, b.d)).toISOString().slice(0, 10);
+  else delete out.unlock;
+  return out;
+}
+
+export function publicState(raw, env = {}, nowMs = Date.now()) {
+  const k = withAge(raw, nowMs);
   return {
+    unlock: k?.unlock || null,
     age: k?.age || null,
     on: env.KIDS_MODE === "all" || !!k?.on || k?.age === "teen",
     locked: k?.age === "teen" || env.KIDS_MODE === "all",
@@ -38,7 +68,7 @@ export function makeKidsHandler({ verifyToken, getKids, setKids, getConfig = asy
     if (!user?.uid) return json(401, { error: "unauthenticated" });
     let body;
     try { body = await request.json(); } catch { return json(400, { error: "bad_request" }); }
-    const k = (await getKids(user.uid)) || {};
+    const k = withAge((await getKids(user.uid)) || {}, now());
     const { action } = body || {};
     // "Kids Mode for everyone" can be switched on in the admin panel too
     let cfg = null; try { cfg = await getConfig(); } catch {}
@@ -53,17 +83,25 @@ export function makeKidsHandler({ verifyToken, getKids, setKids, getConfig = asy
       const limits = { day: a.day, week: a.week, dayKey: a.dayKey, weekKey: a.weekKey };
       let doc = null; try { doc = await getUsage(user.uid); } catch {}
       const usage = publicUsage(usageState(doc, limits, now()));
-      return json(200, { ...publicState(k, env), banned: !!k.banned, web: !(cfg && cfg.webSearch === false), webPerDay: a.searches, freeWebPerDay: cfg && Number.isInteger(cfg.searchesPerUser) ? cfg.searchesPerUser : 5, usage,
+      const bdayChange = !!k.age && (owner || (k.age !== "under13" && !(k.bdayChanges >= 1)));
+      return json(200, { ...publicState(k, env, now()), bday: k.bday || null, bdayChange, banned: !!k.banned, web: !(cfg && cfg.webSearch === false), webPerDay: a.searches, freeWebPerDay: cfg && Number.isInteger(cfg.searchesPerUser) ? cfg.searchesPerUser : 5, usage,
         plan: publicPlan(shownSub), billing: !!env.STRIPE_SECRET_KEY, owner, viewAs, memory: a.memory && !publicState(k, env).on });
     }
 
     if (action === "age") {
-      if (k.age) return json(409, { error: "age_already_set", ...publicState(k, env) });
-      const age = body.age;
-      if (!["under13", "teen", "adult"].includes(age)) return json(400, { error: "bad_request" });
-      const next = { age, on: age === "teen", setAt: new Date(now()).toISOString() };
+      // First time: anyone. After that: one change each (none if under 13), as many as the site owner likes.
+      if (k.age && !isAdmin(user, env)) {
+        if (k.age === "under13") return json(409, { error: "age_already_set", ...publicState(k, env, now()) });
+        if (k.bdayChanges >= 1) return json(409, { error: "change_used", ...publicState(k, env, now()) });
+      }
+      const b = parseBday(body.bday), years = b ? yearsOld(b, now()) : -1;
+      if (!b || years < 0 || years > 120) return json(400, { error: "bad_birthday" });
+      const age = groupOf(years);
+      const next = { ...k, age, bday: body.bday, on: age === "teen" || (!!k.on && !!k.pinHash), setAt: new Date(now()).toISOString() };
+      delete next.unlock;
+      if (k.age) next.bdayChanges = (k.bdayChanges || 0) + 1;
       await setKids(user.uid, next);
-      return json(200, publicState(next, env));
+      return json(200, publicState(next, env, now()));
     }
 
     if (action === "on" || action === "off") {
@@ -78,7 +116,7 @@ export function makeKidsHandler({ verifyToken, getKids, setKids, getConfig = asy
         await setKids(user.uid, next);
         return json(200, publicState(next, env));
       }
-      if (!k.on) return json(200, publicState(k, env));
+      if (!k.on) return json(200, publicState(k, env, now()));
       if (k.lockUntil && now() < k.lockUntil) return json(429, { error: "too_many_tries", retryAt: k.lockUntil });
       const good = k.pinHash && k.salt && timingSafeEqual(Buffer.from(hashPin(pin, k.salt), "hex"), Buffer.from(k.pinHash, "hex"));
       if (!good) {

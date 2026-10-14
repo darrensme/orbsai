@@ -115,6 +115,23 @@ button{font:inherit;color:inherit}
 .gcard p{margin:0;color:var(--muted);line-height:1.5}
 .gbtn{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;background:var(--accent);color:var(--bg);font-weight:600;border-radius:12px;padding:12px}
 .gcard .outline{width:100%}
+.bday{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;margin:4px 0}
+.bdorb{width:92px;height:92px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.55) 0,transparent 36%),linear-gradient(140deg,#4f7bff,#9b5cff 55%,#ff5fb8);box-shadow:0 10px 28px rgba(155,92,255,.35),inset 0 -8px 18px rgba(0,0,0,.18);animation:bdfloat 4s ease-in-out infinite}
+.bdorb b{font:700 2.1rem/1 var(--display,inherit)}
+.bdorb small{font-size:.68rem;opacity:.9;margin-top:2px}
+.bdorb.pop b{animation:bdpop .25s ease}
+@keyframes bdfloat{50%{transform:translateY(-5px)}}
+@keyframes bdpop{40%{transform:scale(1.25)}}
+.bdshow{font:400 1.3rem var(--display,inherit);min-height:1.6em}
+.bdrow{width:100%;display:grid;grid-template-columns:48px 30px 1fr 30px;gap:8px;align-items:center}
+.bdrow label{font-size:.85rem;color:var(--muted);text-align:left}
+.bdstep{width:30px;height:30px;border-radius:50%;border:1px solid var(--line,rgba(128,128,128,.35));background:transparent;color:inherit;font:inherit;line-height:1;cursor:pointer;padding:0}
+.bdstep:hover{border-color:var(--c)}
+.bday input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:10px;margin:0;border-radius:99px;cursor:pointer;background:linear-gradient(90deg,var(--c) var(--p,0%),color-mix(in srgb,var(--c) 18%,transparent) var(--p,0%))}
+.bday input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:radial-gradient(circle at 35% 30%,#fff 0 16%,var(--c) 62%);box-shadow:0 2px 8px color-mix(in srgb,var(--c) 60%,transparent)}
+.bday input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;border:2px solid #fff;background:radial-gradient(circle at 35% 30%,#fff 0 16%,var(--c) 62%);box-shadow:0 2px 8px color-mix(in srgb,var(--c) 60%,transparent)}
+.bday input[type=range]:focus-visible{outline:2px solid var(--c);outline-offset:4px}
+@media (prefers-reduced-motion:reduce){.bdorb,.bdorb.pop b{animation:none}}
 .hint{font-size:.9rem;color:var(--muted);line-height:1.4}
 .msel{position:static}
 .mbtn{font:inherit;font-size:1.05rem;background:var(--me);border:none;border-radius:10px;padding:8px 14px;color:var(--ink);cursor:pointer;white-space:nowrap}
@@ -1753,7 +1770,7 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
           <label for="kidsPin2" hidden>Confirm PIN</label><input id="kidsPin2" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Type the PIN again">
           <button class="outline" id="kidsGo" type="submit">Turn on Kids Mode</button>
         </form>
-        <div class="setrow"><button class="outline" id="kidsBtn" type="button" hidden>Turn on Kids Mode</button><button class="outline" type="button" data-open="safetyModal">Safety tips</button></div>
+        <div class="setrow"><button class="outline" id="kidsBtn" type="button" hidden>Turn on Kids Mode</button><button class="outline" type="button" data-open="safetyModal">Safety tips</button><button class="outline" id="bdayBtn" type="button" hidden>Change birthday</button></div>
         <small class="fine" id="kidsMsg" role="status"></small></div>
       <div class="sr"><div class="swrow"><span class="acct"><b class="sr-t">Two-step sign-in</b><span class="dot2" id="mfaDot"></span><span class="sr-s" id="mfaTxt">Off</span></span><button class="outline small" id="mfaBtn" type="button">Set up</button></div>
         <small class="fine">After your password, Orbs also asks for a code from an authenticator app or your email.</small></div>
@@ -1818,7 +1835,7 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
         <li><b>Account info:</b> your email, and your name and profile picture if you sign in with Google or add a name.</li>
         <li><b>Your chats and settings:</b> your messages, the orbs' replies, and pinned orbs, so they can follow you to any device.</li>
         <li><b>A usage counter:</b> how much of your daily and weekly usage you've used, so limits work. Not what the messages say.</li>
-        <li><b>Your age group</b> (under 13, 13 to 17, or 18+) and whether Kids Mode is on. A parent PIN is saved only in a scrambled form that can't be turned back into the PIN.</li>
+        <li><b>Your birthday</b>, used only to work out your age group (under 13, 13 to 17, or 18+), and whether Kids Mode is on. A parent PIN is saved only in a scrambled form that can't be turned back into the PIN.</li>
         <li><b>A safety log:</b> when Kids Mode blocks something, we save the type of problem (like "personal info"), which orb, and when. Not the message itself.</li>
         <li><b>Reports:</b> if you report a reply, we save that reply and your reason so it can be checked.</li>
         <li><b>Thumbs up and down:</b> your vote, which orb, and anything you choose to add (a reason, or the reply if you tick the box).</li>
@@ -2194,10 +2211,16 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
       <div class="alinks"><button class="linkbtn" id="mfaSwap" type="button"></button><button class="linkbtn" id="mfaOut" type="button">Sign out</button></div>
     </form>
     <div class="vbox" id="aAge" hidden>
-      <button class="gbtn" type="button" data-age="adult">18 or older</button>
-      <button class="gbtn" type="button" data-age="teen">13 to 17</button>
-      <button class="outline" type="button" data-age="under13">Under 13</button>
-      <small class="fine">If you're 13 to 17, Kids Mode stays on to keep things safe, and you need a parent or guardian's permission to use Orbs.</small>
+      <div class="bday">
+        <div class="bdorb" id="bdOrb" aria-hidden="true"><b id="bdAge">0</b><small>years old</small></div>
+        <div class="bdshow" id="bdShow" aria-live="polite">January 1, 2000</div>
+        <div class="bdrow" style="--c:#4f7bff"><label for="bdM">Month</label><button class="bdstep" type="button" data-k="bdM" data-d="-1" aria-label="Earlier month">&minus;</button><input type="range" id="bdM" min="1" max="12" value="1"><button class="bdstep" type="button" data-k="bdM" data-d="1" aria-label="Later month">+</button></div>
+        <div class="bdrow" style="--c:#9b5cff"><label for="bdD">Day</label><button class="bdstep" type="button" data-k="bdD" data-d="-1" aria-label="Earlier day">&minus;</button><input type="range" id="bdD" min="1" max="31" value="1"><button class="bdstep" type="button" data-k="bdD" data-d="1" aria-label="Later day">+</button></div>
+        <div class="bdrow" style="--c:#ff5fb8"><label for="bdY">Year</label><button class="bdstep" type="button" data-k="bdY" data-d="-1" aria-label="Earlier year">&minus;</button><input type="range" id="bdY" min="1926" max="2026" value="2000"><button class="bdstep" type="button" data-k="bdY" data-d="1" aria-label="Later year">+</button></div>
+      </div>
+      <button class="gbtn" id="bdGo" type="button">That's my birthday</button>
+      <button class="linkbtn" id="bdCancel" type="button" hidden>Cancel</button>
+      <small class="fine" id="bdFine">If you're 13 to 17, Kids Mode stays on to keep things safe, and you need a parent or guardian's permission to use Orbs.</small>
     </div>
     <div class="vbox" id="aBlocked" hidden>
       <button class="outline" id="bOut" type="button">Sign out</button>

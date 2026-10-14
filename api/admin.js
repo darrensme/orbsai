@@ -5,6 +5,7 @@ import { makeAdminHandler } from "./_adminapi.js";
 import { siteConfig, dayKey } from "./_core.js";
 import { activePlan } from "./_plans.js";
 import { budgets, DEFAULT_BUDGETS } from "./_limits.js";
+import { withAge } from "./_kids.js";
 
 const ms = (v) => (v && typeof v.toMillis === "function" ? v.toMillis() : typeof v === "number" ? v : v instanceof Date ? v.getTime() : null);
 const rows = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -27,7 +28,7 @@ async function load() {
   const subs = {}, planOf = {};
   subsSnap.forEach((d) => { const p = activePlan(d.data()); if (p) { subs[p] = (subs[p] || 0) + 1; planOf[d.id] = p; } });
   const kids = {}; let teens = 0, kidsOn = 0, banned = 0;
-  kidsSnap.forEach((d) => { const k = d.data() || {}; kids[d.id] = k; if (k.age === "teen") teens++; if (k.on || k.age === "teen") kidsOn++; if (k.banned) banned++; });
+  kidsSnap.forEach((d) => { const k = withAge(d.data() || {}); kids[d.id] = k; if (k.age === "teen") teens++; if (k.on || k.age === "teen") kidsOn++; if (k.banned) banned++; });
 
   // Everyone who signed up (up to 5,000 for the list)
   const users = []; let token;
