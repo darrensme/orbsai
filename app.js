@@ -1744,7 +1744,7 @@ $("kidsForm").addEventListener("submit", e => { e.preventDefault(); busyBtn($("k
     msg.textContent = r.error === "wrong_pin" ? `Wrong PIN. ${r.triesLeft} tries left.` : r.error === "too_many_tries" ? "Too many wrong PINs. Try again in 15 minutes." : "Couldn't change Kids Mode. Try again.";
   } catch (_) { msg.textContent = "Couldn't reach Orbs. Check your connection."; }
 }); });
-// Birthday sliders: month, day, year. The orb shows how old that makes you.
+// Birthday picker: scroll wheels for month, day, year.
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const ROW = 36, bdCols = { m: $("bdM"), d: $("bdD"), y: $("bdY") };
 let bdYears = [];
@@ -1758,8 +1758,7 @@ function bdPaint(){
   let { m, d, y } = bdVal(); const max = new Date(y, m, 0).getDate();
   if (bdCols.d.children.length !== max) { d = Math.min(d, max); bdFill(bdCols.d, nums(1, max)); bdCols.d.scrollTop = (d - 1) * ROW; }
   for (const c of Object.values(bdCols)) { const i = bdIdx(c); [...c.children].forEach((x, j) => { x.classList.toggle("on", j === i); x.setAttribute("aria-selected", j === i); }); }
-  const a = bdAgeOf(y, m, d), ab = $("bdAge");
-  if (ab.textContent !== String(Math.max(a, 0))) { ab.textContent = Math.max(a, 0); const o = $("bdOrb"); o.classList.remove("pop"); void o.offsetWidth; o.classList.add("pop"); }
+  const a = bdAgeOf(y, m, d);
   $("bdGo").disabled = a < 0; $("bdGo").textContent = a < 0 ? "That's in the future" : "That's my birthday";
 }
 function bdSet(iso){
