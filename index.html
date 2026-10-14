@@ -122,15 +122,13 @@ button{font:inherit;color:inherit}
 .bdorb.pop b{animation:bdpop .25s ease}
 @keyframes bdfloat{50%{transform:translateY(-5px)}}
 @keyframes bdpop{40%{transform:scale(1.25)}}
-.bdshow{font:400 1.3rem var(--display,inherit);min-height:1.6em}
-.bdrow{width:100%;display:grid;grid-template-columns:48px 30px 1fr 30px;gap:8px;align-items:center}
-.bdrow label{font-size:.85rem;color:var(--muted);text-align:left}
-.bdstep{width:30px;height:30px;border-radius:50%;border:1px solid var(--line,rgba(128,128,128,.35));background:transparent;color:inherit;font:inherit;line-height:1;cursor:pointer;padding:0}
-.bdstep:hover{border-color:var(--c)}
-.bday input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:10px;margin:0;border-radius:99px;cursor:pointer;background:linear-gradient(90deg,var(--c) var(--p,0%),color-mix(in srgb,var(--c) 18%,transparent) var(--p,0%))}
-.bday input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:radial-gradient(circle at 35% 30%,#fff 0 16%,var(--c) 62%);box-shadow:0 2px 8px color-mix(in srgb,var(--c) 60%,transparent)}
-.bday input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;border:2px solid #fff;background:radial-gradient(circle at 35% 30%,#fff 0 16%,var(--c) 62%);box-shadow:0 2px 8px color-mix(in srgb,var(--c) 60%,transparent)}
-.bday input[type=range]:focus-visible{outline:2px solid var(--c);outline-offset:4px}
+.bdwheel{position:relative;width:100%;height:180px;display:grid;grid-template-columns:1.7fr .8fr 1.1fr;gap:6px;-webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent)}
+.bdwheel::before{content:"";position:absolute;left:0;right:0;top:72px;height:36px;border-radius:10px;pointer-events:none;background:linear-gradient(90deg,rgba(79,123,255,.16),rgba(155,92,255,.16),rgba(255,95,184,.16));border:1px solid rgba(155,92,255,.35);box-sizing:border-box}
+.bdcol{height:180px;box-sizing:border-box;padding:72px 0;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;outline:none;border-radius:10px}
+.bdcol::-webkit-scrollbar{display:none}
+.bdcol:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+.bdit{height:36px;line-height:36px;scroll-snap-align:center;color:var(--muted);font-size:1.02rem;cursor:pointer;user-select:none;transition:color .15s,transform .15s}
+.bdit.on{color:inherit;font-weight:700;transform:scale(1.1)}
 @media (prefers-reduced-motion:reduce){.bdorb,.bdorb.pop b{animation:none}}
 .hint{font-size:.9rem;color:var(--muted);line-height:1.4}
 .msel{position:static}
@@ -2213,10 +2211,11 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
     <div class="vbox" id="aAge" hidden>
       <div class="bday">
         <div class="bdorb" id="bdOrb" aria-hidden="true"><b id="bdAge">0</b><small>years old</small></div>
-        <div class="bdshow" id="bdShow" aria-live="polite">January 1, 2000</div>
-        <div class="bdrow" style="--c:#4f7bff"><label for="bdM">Month</label><button class="bdstep" type="button" data-k="bdM" data-d="-1" aria-label="Earlier month">&minus;</button><input type="range" id="bdM" min="1" max="12" value="1"><button class="bdstep" type="button" data-k="bdM" data-d="1" aria-label="Later month">+</button></div>
-        <div class="bdrow" style="--c:#9b5cff"><label for="bdD">Day</label><button class="bdstep" type="button" data-k="bdD" data-d="-1" aria-label="Earlier day">&minus;</button><input type="range" id="bdD" min="1" max="31" value="1"><button class="bdstep" type="button" data-k="bdD" data-d="1" aria-label="Later day">+</button></div>
-        <div class="bdrow" style="--c:#ff5fb8"><label for="bdY">Year</label><button class="bdstep" type="button" data-k="bdY" data-d="-1" aria-label="Earlier year">&minus;</button><input type="range" id="bdY" min="1926" max="2026" value="2000"><button class="bdstep" type="button" data-k="bdY" data-d="1" aria-label="Later year">+</button></div>
+        <div class="bdwheel">
+          <div class="bdcol" id="bdM" tabindex="0" role="listbox" aria-label="Month"></div>
+          <div class="bdcol" id="bdD" tabindex="0" role="listbox" aria-label="Day"></div>
+          <div class="bdcol" id="bdY" tabindex="0" role="listbox" aria-label="Year"></div>
+        </div>
       </div>
       <button class="gbtn" id="bdGo" type="button">That's my birthday</button>
       <button class="linkbtn" id="bdCancel" type="button" hidden>Cancel</button>

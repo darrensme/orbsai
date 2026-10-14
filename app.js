@@ -1746,29 +1746,37 @@ $("kidsForm").addEventListener("submit", e => { e.preventDefault(); busyBtn($("k
 }); });
 // Birthday sliders: month, day, year. The orb shows how old that makes you.
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const bdEls = { m: $("bdM"), d: $("bdD"), y: $("bdY") };
+const ROW = 36, bdCols = { m: $("bdM"), d: $("bdD"), y: $("bdY") };
+let bdYears = [];
 const pad2 = (n) => String(n).padStart(2, "0");
+const nums = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 function bdAgeOf(y, m, d){ const n = new Date(); return n.getFullYear() - y - ((n.getMonth() + 1 < m || (n.getMonth() + 1 === m && n.getDate() < d)) ? 1 : 0); }
+function bdFill(col, labels){ col.replaceChildren(...labels.map((t, i) => { const x = el("div", "bdit", String(t)); x.setAttribute("role", "option"); x.onclick = () => col.scrollTo({ top: i * ROW, behavior: "smooth" }); return x; })); }
+const bdIdx = (col) => Math.max(0, Math.min(col.children.length - 1, Math.round(col.scrollTop / ROW)));
+const bdVal = () => ({ m: bdIdx(bdCols.m) + 1, d: bdIdx(bdCols.d) + 1, y: bdYears[bdIdx(bdCols.y)] });
 function bdPaint(){
-  const y = +bdEls.y.value, m = +bdEls.m.value, max = new Date(y, m, 0).getDate();
-  bdEls.d.max = max; if (+bdEls.d.value > max) bdEls.d.value = max;
-  const d = +bdEls.d.value, a = bdAgeOf(y, m, d);
-  for (const r of Object.values(bdEls)) r.style.setProperty("--p", ((r.value - r.min) / (r.max - r.min) * 100) + "%");
-  $("bdShow").textContent = `${MONTHS[m - 1]} ${d}, ${y}`;
-  const ab = $("bdAge"); if (ab.textContent !== String(Math.max(a, 0))) { ab.textContent = Math.max(a, 0); const o = $("bdOrb"); o.classList.remove("pop"); void o.offsetWidth; o.classList.add("pop"); }
+  let { m, d, y } = bdVal(); const max = new Date(y, m, 0).getDate();
+  if (bdCols.d.children.length !== max) { d = Math.min(d, max); bdFill(bdCols.d, nums(1, max)); bdCols.d.scrollTop = (d - 1) * ROW; }
+  for (const c of Object.values(bdCols)) { const i = bdIdx(c); [...c.children].forEach((x, j) => { x.classList.toggle("on", j === i); x.setAttribute("aria-selected", j === i); }); }
+  const a = bdAgeOf(y, m, d), ab = $("bdAge");
+  if (ab.textContent !== String(Math.max(a, 0))) { ab.textContent = Math.max(a, 0); const o = $("bdOrb"); o.classList.remove("pop"); void o.offsetWidth; o.classList.add("pop"); }
   $("bdGo").disabled = a < 0; $("bdGo").textContent = a < 0 ? "That's in the future" : "That's my birthday";
 }
 function bdSet(iso){
-  const n = new Date(); bdEls.y.max = n.getFullYear(); bdEls.y.min = n.getFullYear() - 100;
+  const top = new Date().getFullYear(); bdYears = nums(top - 100, top);
   const x = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "") || [0, 2000, 1, 1];
-  bdEls.y.value = +x[1]; bdEls.m.value = +x[2]; bdPaint(); bdEls.d.value = +x[3]; bdPaint();
+  bdFill(bdCols.m, MONTHS); bdFill(bdCols.y, bdYears); bdFill(bdCols.d, nums(1, 31));
+  bdCols.m.scrollTop = (+x[2] - 1) * ROW; bdCols.y.scrollTop = Math.max(0, bdYears.indexOf(+x[1])) * ROW; bdCols.d.scrollTop = 0;
+  bdPaint(); bdCols.d.scrollTop = (+x[3] - 1) * ROW; bdPaint();
 }
-for (const r of Object.values(bdEls)) r.oninput = bdPaint;
-for (const b of document.querySelectorAll(".bdstep")) b.onclick = () => { const r = $(b.dataset.k); r.value = +r.value + +b.dataset.d; bdPaint(); };
+for (const c of Object.values(bdCols)) {
+  let raf = 0; c.addEventListener("scroll", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(bdPaint); }, { passive:true });
+  c.onkeydown = (e) => { if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return; e.preventDefault(); c.scrollTo({ top: (bdIdx(c) + (e.key === "ArrowDown" ? 1 : -1)) * ROW, behavior:"smooth" }); };
+}
 let bdChanging = false;
 $("bdGo").onclick = () => busyBtn($("bdGo"), async () => {
   const u = pending || auth.currentUser; if (!u) return showGate("signin");
-  const bday = `${bdEls.y.value}-${pad2(bdEls.m.value)}-${pad2(bdEls.d.value)}`;
+  const v = bdVal(), bday = `${v.y}-${pad2(v.m)}-${pad2(v.d)}`;
   try {
     const r = await kidsApi(u, { action:"age", bday });
     if (!r.ok && r.error === "change_used") return say("You've already changed your birthday once.");
