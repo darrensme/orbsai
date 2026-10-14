@@ -1517,6 +1517,7 @@ async function loadAccount(u){
 
 // ---------- Sign-in screen ----------
 const gate = $("gate");
+let bdChanging = false; // true while changing a birthday from Settings
 let authMode = "in";
 const AUTH_ERR = {
   "auth/invalid-credential":"Wrong email or password.", "auth/wrong-password":"Wrong email or password.", "auth/user-not-found":"Wrong email or password.",
@@ -1537,6 +1538,7 @@ function authErr(e){ const c = e && e.code; if (c === "auth/popup-closed-by-user
 function say(msg, ok){ const el = $("aErr"); el.textContent = msg || ""; el.classList.toggle("aok", !!ok); }
 function showGate(mode, email){
   gate.hidden = false; say("");
+  gate.classList.toggle("bdmodal", mode === "age" && bdChanging);
   $("landing").hidden = mode !== "home"; $("authCard").hidden = mode === "home";
   $("aBack").hidden = mode !== "signin";
   if (mode === "home") { gate.scrollTop = 0; return; }
@@ -1774,7 +1776,6 @@ for (const c of Object.values(bdCols)) {
   let raf = 0; c.addEventListener("scroll", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(bdPaint); }, { passive:true });
   c.onkeydown = (e) => { if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return; e.preventDefault(); c.scrollTo({ top: (bdIdx(c) + (e.key === "ArrowDown" ? 1 : -1)) * ROW, behavior:"smooth" }); };
 }
-let bdChanging = false;
 $("bdGo").onclick = () => busyBtn($("bdGo"), async () => {
   const u = pending || auth.currentUser; if (!u) return showGate("signin");
   const v = bdVal(), bday = `${v.y}-${pad2(v.m)}-${pad2(v.d)}`;
@@ -1785,7 +1786,8 @@ $("bdGo").onclick = () => busyBtn($("bdGo"), async () => {
     bdChanging = false; await enter(u);
   } catch (_) { say("Couldn't reach Orbs. Check your connection."); }
 });
-$("bdCancel").onclick = () => { bdChanging = false; gate.hidden = true; };
+$("bdCancel").onclick = () => { bdChanging = false; gate.hidden = true; gate.classList.remove("bdmodal"); };
+gate.addEventListener("click", (e) => { if (e.target === gate && gate.classList.contains("bdmodal")) $("bdCancel").click(); });
 $("bdayBtn").onclick = () => { bdChanging = true; showGate("age"); };
 $("bOut").onclick = () => A.signOut(auth);
 
