@@ -83,15 +83,15 @@ export function makeKidsHandler({ verifyToken, getKids, setKids, getConfig = asy
       const limits = { day: a.day, week: a.week, dayKey: a.dayKey, weekKey: a.weekKey };
       let doc = null; try { doc = await getUsage(user.uid); } catch {}
       const usage = publicUsage(usageState(doc, limits, now()));
-      const bdayChange = !!k.age && (owner || (k.age !== "under13" && !(k.bdayChanges >= 1)));
+      const bdayChange = !!k.age && (owner || (k.age === "adult" && !(k.bdayChanges >= 1)));
       return json(200, { ...publicState(k, env, now()), bday: k.bday || null, bdayChange, banned: !!k.banned, web: !(cfg && cfg.webSearch === false), webPerDay: a.searches, freeWebPerDay: cfg && Number.isInteger(cfg.searchesPerUser) ? cfg.searchesPerUser : 5, usage,
         plan: publicPlan(shownSub), billing: !!env.STRIPE_SECRET_KEY, owner, viewAs, memory: a.memory && !publicState(k, env).on });
     }
 
     if (action === "age") {
-      // First time: anyone. After that: one change each (none if under 13), as many as the site owner likes.
+      // First time: anyone. After that: 18+ get one change (under 13 and 13 to 17 are locked); the site owner can change theirs any time.
       if (k.age && !isAdmin(user, env)) {
-        if (k.age === "under13") return json(409, { error: "age_already_set", ...publicState(k, env, now()) });
+        if (k.age !== "adult") return json(409, { error: "age_already_set", ...publicState(k, env, now()) });
         if (k.bdayChanges >= 1) return json(409, { error: "change_used", ...publicState(k, env, now()) });
       }
       const b = parseBday(body.bday), years = b ? yearsOld(b, now()) : -1;
