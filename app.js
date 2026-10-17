@@ -4,7 +4,7 @@ import { marked } from "./vendor/marked.esm.js";
 import DOMPurify from "./vendor/purify.es.mjs";
 const BOTS = {
   neb: {
-    name:"Nebula", role:"Everything Else", glyph:"N", color:"--c-neb",
+    name:"Celeste", role:"Everything Else (previously Nebula)", glyph:"C", color:"--c-neb",
     ask:"What's on your mind?",
     chips:["Plan a fun weekend for me","Explain how black holes work","Help me write a quick email"]
   },
@@ -317,6 +317,7 @@ ORB.hex = { shape:`<g class="o-ghostbody"><path d="M50 27C66 27 76 39 76 53C76 6
 let nebN = 0;
 // Orbs 2.0: same characters, now soft glowing gradient spheres-ish: a halo behind, a glossy highlight, a little ground shadow
 function orbSVG(k){
+  if (k === "neb") return celesteSVG();
   const o = ORB[k], y = o.ey, n = ++nebN;
   const eye = x => `<rect x="${x-3}" y="${y-8.5}" width="6" height="17" rx="3" fill="${o.eyeFill || (k === "neb" ? "var(--neb-eye)" : "#111")}" transform="rotate(${o.tilt} ${x} ${y})"/>`;
   const gloss = k === "hex" ? "" : `<g fill="url(#oh${n})" pointer-events="none">${o.shape}</g>`;
@@ -331,6 +332,52 @@ function orbSVG(k){
       ${o.acc}
     </g></g></g></svg>`;
 }
+// Celeste (previously Nebula): one round orb whose look follows the time of day on the visitor's own clock.
+//   6 to 11 AM sunrise, 12 to 4 PM sun and clouds, 5 to 10 PM sunset, 11 PM to 5 AM a sleepy moon in a satin sleep mask.
+const celesteTime = (h = new Date().getHours()) => h >= 6 && h <= 11 ? "sunrise" : h >= 12 && h <= 16 ? "day" : h >= 17 && h <= 22 ? "sunset" : "night";
+const cRays = (col) => { let s = ""; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, c = Math.cos(a), d = Math.sin(a); s += `<path d="M${(50 + c * 33).toFixed(1)} ${(60 + d * 33).toFixed(1)}L${(50 + c * 42).toFixed(1)} ${(60 + d * 42).toFixed(1)}"/>`; } return `<g class="s-spin" stroke="${col}" stroke-width="4.2" stroke-linecap="round">${s}</g>`; };
+const cPuff = (x, y, sc, cls, op) => `<g class="${cls}" opacity="${op}"><g transform="translate(${x} ${y}) scale(${sc})"><circle cx="-6" cy="0" r="3.5"/><circle cx="0" cy="-1.5" r="5"/><circle cx="6" cy="0" r="3.5"/><rect x="-9.5" y="-1" width="19" height="4.5" rx="2.25"/></g></g>`;
+const CELESTE = {
+  sunrise: { color:"#ff9f7a", g:["#ff8db8", "#ffc27a"], back:() => cRays("#ff9f5a"),
+    acc:(n) => `<defs><linearGradient id="cth${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#f6eefc"/></linearGradient></defs>
+      <g fill="url(#cth${n})">${cPuff(26, 70, 1, "s-cloud", ".95")}${cPuff(72, 78, 1.1, "s-haze", ".9")}${cPuff(38, 87, .8, "s-cloud", ".8")}</g>` },
+  day: { color:"#ffc928", g:["#ffe066", "#ffb21e"], back:() => cRays("#ffb800"),
+    acc:(n) => `<g class="s-cloud"><g transform="translate(74 84) scale(1.05)"><defs><linearGradient id="ccl${n}" x1="0" y1="0" x2="0" y2="1"><stop offset=".45" stop-color="#fff"/><stop offset="1" stop-color="#dce6ff"/></linearGradient></defs>
+      <ellipse cx="0" cy="8.5" rx="13" ry="1.6" fill="#000" opacity=".08"/><path d="M-13 6H13A6 6 0 0 0 12 -5A8 8 0 0 0 -1 -9A7 7 0 0 0 -12 -3A5 5 0 0 0 -13 6Z" fill="url(#ccl${n})"/></g></g>` },
+  sunset: { color:"#ff7a59", g:["#ffb244", "#e64f9d"], stripes:true,
+    acc:() => `<g class="s-bird" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"><path d="M72 28q3-3 6 0q3-3 6 0"/><path d="M82 19q2-2 4 0q2-2 4 0" opacity=".7"/></g>` },
+  night: { color:"#b9b2f0", g:["#f3f1ff", "#c4bdf2"], ey:62,
+    acc:(n) => `<g fill="#a79fe6" opacity=".55"><circle cx="71" cy="70" r="3.5"/><circle cx="31" cy="74" r="3.5"/><circle cx="60" cy="82" r="2.5"/><circle cx="27" cy="60" r="2"/></g>
+      <defs><linearGradient id="csa${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#363b88"/><stop offset="1" stop-color="#1b1e4d"/></linearGradient>
+        <linearGradient id="cgo${n}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8892f"/><stop offset=".5" stop-color="#f3d27a"/><stop offset="1" stop-color="#b8892f"/></linearGradient>
+        <clipPath id="chd${n}"><circle cx="50" cy="60" r="29"/></clipPath></defs>
+      <g clip-path="url(#chd${n})" fill="none"><path d="M34.5 43Q25 44.2 19 51M65.5 43Q75 44.2 81 51" stroke="#d9ac4f" stroke-width="4.8" stroke-linecap="round"/><path d="M34.5 43Q25 44.2 19 51M65.5 43Q75 44.2 81 51" stroke="#1c1f4f" stroke-width="2.6"/></g>
+      <path d="M33 43C33 37.5 40.65 35 50 35C59.35 35 67 37.5 67 43C67 48 62.75 50.8 58.08 50.4C54.67 50.1 52.55 48.8 50 48.6C47.45 48.8 45.33 50.1 41.92 50.4C37.25 50.8 33 48 33 43Z" fill="url(#csa${n})" stroke="url(#cgo${n})" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M37.25 39.6Q50 35.8 62.75 39.6" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".22"/>
+      <g fill="none" stroke="#8a7fe0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(-3 0) translate(27 38) scale(.65) translate(-27 -38)"><path class="s-z" d="M23 33h4.5l-4.5 5.5h4.5"/><path class="s-z z2" d="M16 24h6l-6 7h6"/><path class="s-z z3" d="M8 14h7.5l-7.5 8.5h7.5"/></g>
+      <g fill="#ffe680"><circle class="s-tw" cx="88" cy="70" r="1.8"/><circle class="s-tw t2" cx="12" cy="66" r="1.6"/><circle class="s-tw t3" cx="90" cy="56" r="1.2"/><path d="M78 21a6 6 0 1 0 4.5 10a4.6 4.6 0 1 1-4.5-10z"/></g>` }
+};
+// opt.plain: just the round body (used under the party hat on the birthday screen)
+function celesteSVG(opt = {}){
+  const t = opt.time || celesteTime(), L = CELESTE[t], n = ++nebN, y = L.ey || 58, plain = !!opt.plain;
+  const eye = x => `<rect x="${x-3}" y="${y-8.5}" width="6" height="17" rx="3" fill="#111"/>`, body = `<circle cx="50" cy="60" r="29"/>`;
+  const stripes = L.stripes && !plain;
+  return `<svg class="orb orb-neb orb-celeste" data-time="${t}"${plain ? ' data-plain="1"' : ""} viewBox="0 0 100 100" aria-hidden="true" style="color:${L.color}">
+    <defs><radialGradient id="og${n}" cx="50%" cy="55%" r="50%"><stop offset="0" stop-color="currentColor" stop-opacity=".42"/><stop offset=".6" stop-color="currentColor" stop-opacity=".12"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient>
+      <radialGradient id="oh${n}" cx="34%" cy="26%" r="80%"><stop offset="0" stop-color="#fff" stop-opacity=".62"/><stop offset=".34" stop-color="#fff" stop-opacity=".08"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></radialGradient>
+      <linearGradient id="cb${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.g[0]}"/><stop offset="1" stop-color="${L.g[1]}"/></linearGradient>
+      ${stripes ? `<mask id="cm${n}"><rect width="100" height="100" fill="#fff"/><g fill="none" stroke="#000" stroke-linecap="round"><path d="M18 69Q50 74.5 82 69" stroke-width="1.6"/><path d="M18 74.5Q50 80 82 74.5" stroke-width="2.2"/><path d="M18 80Q50 85.5 82 80" stroke-width="2.9"/><path d="M18 85.5Q50 91 82 85.5" stroke-width="3.6"/></g></mask>` : ""}</defs>
+    <ellipse class="o-halo2" cx="50" cy="62" rx="48" ry="42" fill="url(#og${n})"/>
+    <ellipse class="o-shadow" cx="50" cy="96" rx="21" ry="3" fill="#000" fill-opacity=".12"/>
+    <g class="o-hop"><g class="o-extra"><g class="o-squish">
+      ${!plain && L.back ? L.back() : ""}<g${stripes ? ` mask="url(#cm${n})"` : ""}><g fill="url(#cb${n})">${body}</g><g fill="url(#oh${n})" pointer-events="none">${body}</g></g>
+      <g class="o-eyes"><g class="o-lids">${eye(42)}${eye(58)}</g></g>
+      ${plain ? "" : L.acc(n)}
+    </g></g></g></svg>`;
+}
+// When the hour moves into a new part of the day, swap every Celeste on the page to the new look
+setInterval(() => { const t = celesteTime(); document.querySelectorAll("svg.orb-celeste:not([data-plain])").forEach(s => { if (s.dataset.time !== t) s.outerHTML = celesteSVG(); }); }, 60000);
+
 function orbInto(el, k){ if (!el || !k) return; el.innerHTML = orbSVG(k); el.classList.add("has-orb"); }
 
 function setAccent(){
@@ -363,7 +410,7 @@ function renderPicker(){
 function renderHome(){
   app.dataset.view = "home"; log.innerHTML = "";
   const mark = $("mark");
-  // Home with no orb picked = the dashboard (greeting, clock, usage, orbs, recent chats). Typing there asks Nebula.
+  // Home with no orb picked = the dashboard (greeting, clock, usage, orbs, recent chats). Typing there asks Celeste.
   const dash = !active && !teamMode;
   app.classList.toggle("dashv", dash);
   $("greet").textContent = teamMode ? "Orb Teams" : greeting();
@@ -710,7 +757,7 @@ function teamToggle(k){
   status.textContent = "";
 }
 // "add Beat", "remove Quill and Abyss", "make Pixel the lead": only when the whole message is that (no Claude call, free)
-const TEAM_ALIAS = { cook: ["miso", "chef"] };
+const TEAM_ALIAS = { cook: ["miso", "chef"], neb: ["nebula"] };
 function teamCommand(text){
   const s = String(text).toLowerCase().replace(/[.!?,;:]+/g, " ").replace(/\s+/g, " ").trim();
   if (s.length > 80) return null;
@@ -1119,7 +1166,7 @@ function nudge(){
   const p = $("picker"); p.classList.remove("nudge"); void p.offsetWidth; p.classList.add("nudge");
   status.textContent = "Pick an orb first!";
 }
-// On Home (the dashboard) there's no orb picked yet: whatever you type goes to Nebula
+// On Home (the dashboard) there's no orb picked yet: whatever you type goes to Celeste
 const DASH_ORB = "neb";
 function needOrb(){
   if (active) return false;
@@ -1746,7 +1793,7 @@ $("kidsForm").addEventListener("submit", e => { e.preventDefault(); busyBtn($("k
     msg.textContent = r.error === "wrong_pin" ? `Wrong PIN. ${r.triesLeft} tries left.` : r.error === "too_many_tries" ? "Too many wrong PINs. Try again in 15 minutes." : "Couldn't change Kids Mode. Try again.";
   } catch (_) { msg.textContent = "Couldn't reach Orbs. Check your connection."; }
 }); });
-// Birthday picker: scroll wheels for month, day, year. Nebula in a party hat says how old that makes you.
+// Birthday picker: scroll wheels for month, day, year. Celeste in a party hat says how old that makes you.
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const ROW = 36, bdCols = { m: $("bdM"), d: $("bdD"), y: $("bdY") };
 let bdYears = [];
@@ -1765,7 +1812,7 @@ function bdPaint(){
   $("bdGo").disabled = a < 0; $("bdGo").textContent = a < 0 ? "That's in the future" : "That's my birthday";
 }
 function bdSet(iso){
-  if (!$("bdNeb").firstChild) orbInto($("bdNeb"), "neb");
+  if (!$("bdNeb").firstChild) { $("bdNeb").innerHTML = celesteSVG({ plain:true }); $("bdNeb").classList.add("has-orb"); }
   const top = new Date().getFullYear(); bdYears = nums(top - 100, top);
   const x = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "") || [0, 2000, 1, 1];
   bdFill(bdCols.m, MONTHS); bdFill(bdCols.y, bdYears); bdFill(bdCols.d, nums(1, 31));

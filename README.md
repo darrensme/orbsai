@@ -2,7 +2,7 @@
 
 Nine helper orbs in one calm chat. People make an account (Google or email + password), their chats save to Firebase, and messages go to Claude Opus through your own server so your API key stays hidden.
 
-The app opens on **Home**: a time-of-day greeting with a live clock and date, a usage panel, your orbs, Orb Teams, recent chats, and quick-start chips. Typing on Home asks Nebula; tapping an orb starts a chat with it. Chats read like a text thread. The house icon (top left) always goes back Home; search and your account are top right.
+The app opens on **Home**: a time-of-day greeting with a live clock and date, a usage panel, your orbs, Orb Teams, recent chats, and quick-start chips. Typing on Home asks Celeste; tapping an orb starts a chat with it. Chats read like a text thread. The house icon (top left) always goes back Home; search and your account are top right.
 
 ## What each file does
 

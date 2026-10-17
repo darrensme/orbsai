@@ -199,7 +199,7 @@ button{font:inherit;color:inherit}
 @keyframes o-bop{0%,100%{transform:scale(1,1)}50%{transform:scale(1.06,.94)}}
 @keyframes o-noteup{0%{transform:translateY(8px);opacity:0}25%{opacity:1}100%{transform:translateY(-14px) rotate(8deg);opacity:0}}
 @keyframes o-say{0%{transform:scale(.3);opacity:0}10%{transform:scale(1.08);opacity:1}16%{transform:scale(1)}42%{opacity:1}50%{opacity:0;transform:scale(1)}100%{opacity:0}}
-/* Quill writes a line, Nova has "aha" moments, Beat's speakers thump, Lingo's lantern sways, Nebula swirls */
+/* Quill writes a line, Nova has "aha" moments, Beat's speakers thump, Lingo's lantern sways, Celeste swirls */
 .orb .o-ink{stroke-dasharray:40;animation:o-ink 2.8s ease-in-out infinite}
 .orb .o-pen{animation:o-pen 2.8s ease-in-out infinite}
 .orb .o-glow{transform-box:fill-box;transform-origin:center;animation:o-aha 3.6s ease-in-out infinite}
@@ -213,6 +213,17 @@ button{font:inherit;color:inherit}
 .orb .o-swirl2{transform-origin:50px 56px;animation:o-rot 6.5s linear infinite reverse}
 .orb .o-stars circle{transform-box:fill-box;transform-origin:center;animation:o-star 2.2s ease-in-out infinite}
 .orb .o-stars circle:nth-child(2){animation-delay:-.8s}.orb .o-stars circle:nth-child(3){animation-delay:-1.5s}
+.orb .s-spin{transform-origin:50px 60px;animation:s-spin 24s linear infinite}
+.orb .s-cloud{animation:s-cloud 7s ease-in-out infinite}.orb .s-haze{animation:s-haze 8s ease-in-out infinite}
+.orb .s-bird{animation:s-bird 3s ease-in-out infinite}
+.orb .s-tw{transform-box:fill-box;transform-origin:center;animation:s-tw 2.4s ease-in-out infinite}.orb .s-tw.t2{animation-delay:-.8s}.orb .s-tw.t3{animation-delay:-1.6s}
+.orb .s-z{animation:s-z 3s ease-in-out infinite}.orb .s-z.z2{animation-delay:.5s}.orb .s-z.z3{animation-delay:1s}
+@keyframes s-spin{to{transform:rotate(360deg)}}
+@keyframes s-cloud{50%{transform:translateX(-6px)}}
+@keyframes s-haze{50%{transform:translateX(5px)}}
+@keyframes s-bird{50%{transform:translate(3px,-3px)}}
+@keyframes s-tw{50%{opacity:.25;transform:scale(.6)}}
+@keyframes s-z{0%{opacity:0;transform:translateY(3px)}25%,70%{opacity:1}100%{opacity:0;transform:translateY(-4px)}}
 .orb-neb .o-hop{animation-delay:-1s}.orb-neb .o-lids{animation-delay:-2.2s}.orb-neb .o-eyes{animation-delay:-3s}
 @keyframes o-ink{0%{stroke-dashoffset:40;opacity:1}70%{stroke-dashoffset:0;opacity:1}90%,100%{stroke-dashoffset:0;opacity:0}}
 @keyframes o-pen{0%{transform:translate(0,0)}17%{transform:translate(6px,-2px)}35%{transform:translate(12px,0)}52%{transform:translate(18px,-2px)}70%{transform:translate(24px,0)}85%{transform:translate(12px,-6px)}100%{transform:translate(0,0)}}
@@ -1885,13 +1896,13 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
     <div class="mh"><h2 id="helpTitle">Help and tips</h2><button class="icon-btn" data-close type="button" aria-label="Close">✕</button></div>
     <div class="lbody">
       <h3>Pick an orb</h3>
-      <p>Each orb is good at one thing: Byte for tech, Chef Miso for cooking, Abyss for games, Pixel for websites, Quill for stories, Nova for homework, Beat for music, and Lingo for languages. Nebula handles everything else.</p>
+      <p>Each orb is good at one thing: Byte for tech, Chef Miso for cooking, Abyss for games, Pixel for websites, Quill for stories, Nova for homework, Beat for music, and Lingo for languages. Celeste handles everything else.</p>
       <h3>One brain for every orb</h3>
       <p>Free runs on Claude Haiku, Light on Claude Sonnet, and Pro and Max on Claude Opus, Anthropic's most capable model. Both move to the newest version by themselves. There's nothing to pick: just choose an orb and ask.</p>
       <h3>Usage</h3>
       <p>Each plan has a daily and a weekly amount of usage. Home and Settings show how much you've used as a percentage, and when it resets in your own time. Long chats, big files, web searches, and Orb Teams use more. Today's usage resets at midnight New York time, and the week resets Monday at midnight New York time.</p>
       <h3>Home</h3>
-      <p>Tap the house at the top left any time to get back Home: your greeting and clock, usage, your orbs, and recent chats. Type in the box on Home to ask Nebula, or tap an orb to start with it.</p>
+      <p>Tap the house at the top left any time to get back Home: your greeting and clock, usage, your orbs, and recent chats. Type in the box on Home to ask Celeste, or tap an orb to start with it.</p>
       <h3>Files and folders</h3>
       <p>Tap <b>+</b> to send pictures, PDFs, or code and text files, or a whole folder. You can also drag files onto the chat box or paste a picture. Files go with that one message, so send them again if you ask about them later.</p>
       <h3>Voice typing</h3>
@@ -2123,7 +2134,7 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
             <div class="lv-panel">
                 <section class="lsec" aria-labelledby="lfTitle">
                   <h2 id="lfTitle">Meet the orbs</h2>
-                  <p class="lsub">Each orb has its own personality and specialty. Nebula takes care of everything else.</p>
+                  <p class="lsub">Each orb has its own personality and specialty. Celeste (previously Nebula) takes care of everything else.</p>
                   <div class="lineup" id="lineup" aria-label="The orbs"></div>
                 </section>
             </div>
@@ -2134,7 +2145,7 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
                   <h2 id="lf2Title">What you get</h2>
                   <p class="lsub">One calm place to ask anything, with a specialist for every kind of question.</p>
                   <ul class="lfeat">
-                    <li><b>Specialist orbs.</b> Byte for tech, Chef Miso for cooking, Abyss for games and Roblox, Pixel for websites, Quill for stories, Nova for homework, Beat for music, Lingo for languages, and Nebula for everything else.</li>
+                    <li><b>Specialist orbs.</b> Byte for tech, Chef Miso for cooking, Abyss for games and Roblox, Pixel for websites, Quill for stories, Nova for homework, Beat for music, Lingo for languages, and Celeste for everything else.</li>
                     <li><b>Orb Teams.</b> On Light and up, pick up to 5 orbs: each does its part, then the lead builds the final result.</li>
                     <li><b>Searches the web.</b> Tap the globe for news, prices, and scores, and see the sites it used.</li>
                     <li><b>Memory you control.</b> On Pro and up, orbs remember your name, hobbies, and projects. See and delete it anytime.</li>
@@ -2170,7 +2181,7 @@ body:has(#gate:not([hidden])) .shell{visibility:hidden}   /* the glass landing/s
             <div class="lv-panel">
                 <section class="faq" aria-label="Questions">
                   <h2>Questions</h2>
-                  <details><summary>What is Orbs AI?</summary><p>Orbs AI is an AI chat with nine helpers called orbs. Byte helps with tech, Chef Miso with cooking, Abyss with games and Roblox, Pixel with websites, Quill with stories, Nova with homework, Beat with music, Lingo with languages like English and Chinese, and Nebula with everything else.</p></details>
+                  <details><summary>What is Orbs AI?</summary><p>Orbs AI is an AI chat with nine helpers called orbs. Byte helps with tech, Chef Miso with cooking, Abyss with games and Roblox, Pixel with websites, Quill with stories, Nova with homework, Beat with music, Lingo with languages like English and Chinese, and Celeste with everything else.</p></details>
                   <details><summary>Is Orbs AI free?</summary><p>Yes. The free plan gives you 15 messages a day on Claude Haiku. Light, Pro and Max give you about 3x, 5x, or 10x the messages of Free on smarter models (Sonnet and Opus), plus more web searches, Orb Teams, and memory.</p></details>
                   <details><summary>What AI does Orbs use?</summary><p>Free runs on Claude Haiku, Light on Claude Sonnet, and Pro and Max on Claude Opus, Anthropic's most capable model. Both move to the newest version automatically. Orbs is an independent project, not made by Anthropic.</p></details>
                   <details><summary>Is it safe for kids and teens?</summary><p>Orbs is for ages 13 and up. Teens always use Kids Mode, which gives kid-safe answers, checks every message and reply with an AI safety check, and blocks sharing personal info.</p></details>
