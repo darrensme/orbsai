@@ -345,7 +345,7 @@ const CELESTE = {
     acc:(n) => `<g class="s-cloud"><g transform="translate(74 84) scale(1.05)"><defs><linearGradient id="ccl${n}" x1="0" y1="0" x2="0" y2="1"><stop offset=".45" stop-color="#fff"/><stop offset="1" stop-color="#dce6ff"/></linearGradient></defs>
       <ellipse cx="0" cy="8.5" rx="13" ry="1.6" fill="#000" opacity=".08"/><path d="M-13 6H13A6 6 0 0 0 12 -5A8 8 0 0 0 -1 -9A7 7 0 0 0 -12 -3A5 5 0 0 0 -13 6Z" fill="url(#ccl${n})"/></g></g>` },
   sunset: { color:"#ff7a59", g:["#ffb244", "#e64f9d"], stripes:true,
-    back:() => { let r = ""; for (let i = 0; i < 7; i++) { const a = (-160 + 140 * i / 6) * Math.PI / 180, c = Math.cos(a), d = Math.sin(a); r += `<path d="M${(50 + c * 33).toFixed(1)} ${(60 + d * 33).toFixed(1)}L${(50 + c * 40).toFixed(1)} ${(60 + d * 40).toFixed(1)}"/>`; }
+    back:() => { let r = ""; for (let i = 0; i < 11; i++) { const a = (-175 + 170 * i / 10) * Math.PI / 180, c = Math.cos(a), d = Math.sin(a); r += `<path d="M${(50 + c * 33).toFixed(1)} ${(60 + d * 33).toFixed(1)}L${(50 + c * 40).toFixed(1)} ${(60 + d * 40).toFixed(1)}"/>`; }
       return `<g class="s-pulse" stroke="#ff8f6b" stroke-width="3.6" stroke-linecap="round">${r}</g>`; },
     acc:(n) => `<defs><linearGradient id="cps${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd1e3"/><stop offset="1" stop-color="#d9a1e6"/></linearGradient></defs>
       <g fill="url(#cps${n})">${cPuff(23, 47, 1.1, "s-cloud", ".95")}</g>
